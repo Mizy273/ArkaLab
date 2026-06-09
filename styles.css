@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ArkaLab — Supabase Perfume Formula Notebook</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand-block">
+        <div class="brand-mark">A</div>
+        <div>
+          <h1>ArkaLab</h1>
+          <p>Supabase Formula Notebook</p>
+        </div>
+      </div>
+      <section class="auth-card" id="connectionPanel">
+        <div class="auth-status">
+          <span class="status-dot" id="statusDot"></span>
+          <strong id="connectionStatus">Checking Supabase...</strong>
+        </div>
+        <p id="connectionHint">No login. ArkaLab akan sync terus ke Supabase jika config betul.</p>
+      </section>
+
+      <button class="primary-btn full" id="newRecipeBtn">+ Resipi Baru</button>
+
+      <div class="search-block">
+        <label for="searchInput">Cari resipi</label>
+        <input id="searchInput" type="search" placeholder="Nama parfum / kod sample..." />
+      </div>
+
+      <div class="filter-tabs" id="statusFilters"></div>
+
+      <div class="recipe-list" id="recipeList"></div>
+
+      <div class="side-footer">
+        <button class="ghost-btn" id="exportBtn">Export JSON</button>
+        <label class="ghost-btn file-label" for="importInput">Import JSON</label>
+        <input id="importInput" type="file" accept="application/json" hidden />
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Lab Record</p>
+          <h2 id="pageTitle">Perfume Formula</h2>
+          <p class="sync-line" id="syncLine">Belum sync</p>
+        </div>
+        <div class="topbar-actions">
+          <button class="ghost-btn" id="refreshBtn" type="button">Refresh</button>
+          <button class="ghost-btn" id="printBtn" type="button">Print Sheet</button>
+          <button class="ghost-btn" id="duplicateBtn" type="button">Duplicate</button>
+          <button class="ghost-btn danger" id="deleteBtn" type="button">Delete</button>
+          <button class="primary-btn" id="saveBtn" type="button">Simpan</button>
+        </div>
+      </header>
+
+      <section class="empty-state" id="emptyState">
+        <div class="empty-card">
+          <div class="empty-icon">✦</div>
+          <h2>Selamat datang ke ArkaLab</h2>
+          <p id="emptyText">Supabase direct mode. Cipta resipi pertama untuk mula sync.</p>
+          <button class="primary-btn" id="emptyNewBtn" type="button">+ Cipta Resipi Pertama</button>
+        </div>
+      </section>
+
+      <form class="recipe-form" id="recipeForm">
+        <section class="panel hero-panel">
+          <div class="hero-grid">
+            <div class="form-field span-2">
+              <label for="perfumeName">Nama Parfum</label>
+              <input id="perfumeName" name="perfumeName" type="text" placeholder="Contoh: Amber Noir" />
+            </div>
+            <div class="form-field">
+              <label for="sampleCode">Kod Sample</label>
+              <input id="sampleCode" name="sampleCode" type="text" placeholder="A01 / B07" />
+            </div>
+            <div class="form-field">
+              <label for="status">Status</label>
+              <select id="status" name="status">
+                <option>Draft</option>
+                <option>Testing</option>
+                <option>Revision</option>
+                <option>Approved</option>
+                <option>Final</option>
+                <option>Archived</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label for="createdAt">Tarikh</label>
+              <input id="createdAt" name="createdAt" type="date" />
+            </div>
+            <div class="form-field">
+              <label for="concentration">Concentration</label>
+              <input id="concentration" name="concentration" type="text" placeholder="EDP / Extrait / Oil" />
+            </div>
+          </div>
+        </section>
+
+        <section class="stats-grid">
+          <article class="stat-card">
+            <span>Total Berat</span>
+            <strong id="totalWeight">0.00 g</strong>
+          </article>
+          <article class="stat-card">
+            <span>Jumlah Bahan</span>
+            <strong id="ingredientCount">0</strong>
+          </article>
+          <article class="stat-card">
+            <span>Last Saved</span>
+            <strong id="lastSaved">Belum simpan</strong>
+          </article>
+        </section>
+
+        <section class="panel formula-panel">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Formula</p>
+              <h3>Resipi Bahan</h3>
+            </div>
+            <button class="secondary-btn" id="addIngredientBtn" type="button">+ Tambah Bahan</button>
+          </div>
+
+          <div class="table-wrap">
+            <table class="formula-table">
+              <thead>
+                <tr>
+                  <th>Nama Bahan</th>
+                  <th>Nota</th>
+                  <th>Berat (g)</th>
+                  <th>%</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="ingredientRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel notes-panel">
+          <div class="form-field">
+            <label for="generalNotes">Nota Umum</label>
+            <textarea id="generalNotes" name="generalNotes" rows="7" placeholder="Kesan bau, projection, longevity, idea revision, test strip notes..."></textarea>
+          </div>
+        </section>
+      </form>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
